@@ -1,0 +1,29 @@
+<!-- Contenedor principal del menú -->
+<nav class="mt-6">
+  <ul>
+    <!-- Itera sobre cada elemento del menú -->
+    <li *ngFor="let item of menuItems" class="mb-1">
+      <!-- 
+        Enlace con directivas de Angular Router y clases de Tailwind CSS.
+        La clase 'active-link' ha sido reemplazada por clases de Tailwind
+        directamente en la directiva routerLinkActive.
+      -->
+      <a
+        [routerLink]="item.ruta"
+        routerLinkActive="bg-blue-600 text-white shadow-lg"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center p-3 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200 group"
+      >
+        <!-- Contenedor del ícono (se inserta el SVG desde el TS) -->
+        <span [innerHTML]="item.icon" class="text-gray-300 group-hover:text-white"></span>
+        
+        <!-- Contenedor para el nombre y la descripción -->
+        <div class="ml-4">
+            
+          <span class="block font-semibold text-base text-gray-200 group-hover:text-white">{{ item.nombre }}</span>
+          <span class="block text-sm text-gray-400">{{ item.description }}</span>
+        </div>
+      </a>
+    </li>
+  </ul>
+</nav>
