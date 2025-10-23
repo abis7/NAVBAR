@@ -16,7 +16,14 @@ export const routes: Routes = [
                 path: 'search',
                 loadComponent: () =>
                     import('./gift/pages/search-page/search-page.component')
+            },
+            {
+                path: 'principal',
+                loadComponent: () =>
+                    import('./gift/pages/dashboard-principal/dashboard-page.component')
             }
+
+
 
         ]
     },

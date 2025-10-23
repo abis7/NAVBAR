@@ -1,0 +1,23 @@
+<form (submit)="$event.preventDefault(); submit()" class="flex items-center gap-2">
+  <label for="txtQuery" class="sr-only">Buscar GIFs</label>
+  <input
+    id="txtQuery"
+    name="q"
+    type="search"
+    [(ngModel)]="query"
+    (keydown.enter)="$event.preventDefault(); submit()"
+    placeholder="Buscar GIFs (ej. gatos, memes...)"
+    class="w-full p-2 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-slate-300"
+    autocomplete="off"
+    aria-label="Buscar GIFs"
+  />
+
+  <button type="button" (click)="clear()" aria-label="Limpiar búsqueda"
+          class="px-3 py-2 rounded-md hover:bg-slate-200">
+    ✖
+  </button>
+
+  <button type="submit" class="px-4 py-2 rounded-md bg-slate-800 text-white hover:opacity-95">
+    Buscar
+  </button>
+</form>

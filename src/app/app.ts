@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import DashboardPageComponent from './gift/pages/dashboard-principal/dashboard-page.component';
 
 @Component({
   selector: 'app-root',

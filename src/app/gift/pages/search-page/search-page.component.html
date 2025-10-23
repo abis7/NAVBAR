@@ -1,1 +1,34 @@
-<p>search-page works!</p>,
+<div class="my-4 px-4 flex flex-col max-w-5xl mx-auto">
+  <!-- Formulario de búsqueda -->
+  <form class="relative w-full mb-4" (submit)="onSearch($event)">
+    <input
+      #txtQuery
+      type="search"
+      placeholder="Busca GIFs divertidísimos o deja vacío para trending"
+      autocomplete="off"
+      (keyup.enter)="onSearch()"
+      class="w-full p-4 pl-12 rounded-full bg-slate-900 text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+    />
+
+    <button
+      type="submit"
+      class="absolute right-1 top-1/2 transform -translate-y-1/2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-500 transition-all"
+    >
+      Buscar
+    </button>
+
+    <!-- Icono de lupa -->
+    <div class="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+      <svg class="w-5 h-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+      </svg>
+    </div>
+  </form>
+
+  <!-- Resultados con scroll -->
+  <div class="overflow-y-auto max-h-[70vh] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <div *ngFor="let gif of gifs">
+      <img [src]="gif.images.fixed_height.url" [alt]="gif.title" class="rounded-lg shadow-lg" />
+    </div>
+  </div>
+</div>
