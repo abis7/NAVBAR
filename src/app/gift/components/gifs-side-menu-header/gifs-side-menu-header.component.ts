@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { environment } from '@environments/environment';
 
 interface MenuItem {
   nombre: string;
@@ -8,7 +9,6 @@ interface MenuItem {
 
 }
 
-//para el perfil
 @Component({
   selector: 'app-gifs-side-menu-header',
   imports: [],
@@ -18,7 +18,7 @@ interface MenuItem {
 export class GifsSideMenuHeaderComponent { 
 
 
-
+envs= environment;
 
   
   

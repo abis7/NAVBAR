@@ -4,6 +4,7 @@ import { Observable, catchError, map, tap, of } from 'rxjs';
 import { LocalStorageService } from './localStorage.service';
 import { SearchParams, TrendingParams } from '../interfaces/search.interface';
 import { Gif, GiphyResponse } from '../interfaces/giphy-response.interface';
+import { environment } from '../../../environments/environment'; // 👈 Asegúrate de la ruta correcta
 
 @Injectable({
   providedIn: 'root'
@@ -12,14 +13,14 @@ export class ApiGiphyService {
   private readonly http = inject(HttpClient);
   private readonly localStorageService = inject(LocalStorageService);
 
-  private readonly API_KEY = 'GIrYAj6G2i0aC5HRnFYMa9aOy3BKTZMU';
-  private readonly BASE_URL = 'https://api.giphy.com/v1/gifs';
+  private readonly API_KEY = environment.ApiKey;
+  private readonly BASE_URL = environment.url;
 
   private readonly ENDPOINTS = {
     search: `${this.BASE_URL}/search`,
     trending: `${this.BASE_URL}/trending`,
     random: `${this.BASE_URL}/random`,
-    getById: `${this.BASE_URL}` 
+    getById: `${this.BASE_URL}`,
   } as const;
 
   private _gifs = signal<Gif[]>([]);
@@ -42,7 +43,8 @@ export class ApiGiphyService {
   public readonly hasHistory = this.localStorageService.hasHistory;
 
   constructor() {
-    
+    console.log(`✅ ${environment.nombreApp} inicializada`);
+    console.log(`💡 Slogan: ${environment.slogan}`);
   }
 
   searchGifs(searchTerm: string, params?: SearchParams): Observable<Gif[]> {
@@ -70,7 +72,7 @@ export class ApiGiphyService {
         tap(gifs => {
           this._gifs.set([...gifs]);
           this._isLoading.set(false);
-          console.log(`API Service - Search completed: ${gifs.length} GIFs for "${normalizedTerm}"`);
+          console.log(`🔎 ${gifs.length} GIFs encontrados para "${normalizedTerm}"`);
         }),
         catchError(error => this.handleError(error))
       );
@@ -92,7 +94,7 @@ export class ApiGiphyService {
         tap(gifs => {
           this._gifs.set([...gifs]);
           this._isLoading.set(false);
-          console.log(`API Service - Trending completed: ${gifs.length} GIFs`);
+          console.log(`🔥 ${gifs.length} GIFs trending cargados`);
         }),
         catchError(error => this.handleError(error))
       );
@@ -140,10 +142,7 @@ export class ApiGiphyService {
   }
 
   private normalizeSearchTerm(term: string): string {
-    return term
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, ' ');
+    return term.trim().toLowerCase().replace(/\s+/g, ' ');
   }
 
   private buildSearchParams(searchTerm: string, params?: SearchParams): HttpParams {
@@ -152,17 +151,9 @@ export class ApiGiphyService {
       .set('q', searchTerm)
       .set('limit', params?.limit?.toString() || '25');
 
-    if (params?.offset !== undefined) {
-      httpParams = httpParams.set('offset', params.offset.toString());
-    }
-
-    if (params?.rating) {
-      httpParams = httpParams.set('rating', params.rating);
-    }
-
-    if (params?.lang) {
-      httpParams = httpParams.set('lang', params.lang);
-    }
+    if (params?.offset !== undefined) httpParams = httpParams.set('offset', params.offset.toString());
+    if (params?.rating) httpParams = httpParams.set('rating', params.rating);
+    if (params?.lang) httpParams = httpParams.set('lang', params.lang);
 
     return httpParams;
   }
@@ -172,16 +163,12 @@ export class ApiGiphyService {
       .set('api_key', this.API_KEY)
       .set('limit', params?.limit?.toString() || '25');
 
-    if (params?.offset !== undefined) {
-      httpParams = httpParams.set('offset', params.offset.toString());
-    }
-
-    if (params?.rating) {
-      httpParams = httpParams.set('rating', params.rating);
-    }
+    if (params?.offset !== undefined) httpParams = httpParams.set('offset', params.offset.toString());
+    if (params?.rating) httpParams = httpParams.set('rating', params.rating);
 
     return httpParams;
   }
+
   private handleError(error: any): Observable<never> {
     console.error('API Error:', error);
 

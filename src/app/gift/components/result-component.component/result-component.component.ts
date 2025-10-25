@@ -1,39 +1,59 @@
-import { ChangeDetectionStrategy, inject, ChangeDetectorRef, Component, OnChanges, Input, computed, signal, SimpleChanges } from '@angular/core';
-import { Gif } from '../../interfaces/giphy-response.interface';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Gif } from '../../interfaces/giphy-response.interface';
 import { GiftCardComponent } from '../gift-card.component/gift-card.component';
 
 @Component({
   selector: 'app-result-component',
+  standalone: true,
   imports: [CommonModule, GiftCardComponent],
   templateUrl: './result-component.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResultComponentComponent implements OnChanges {
-    private readonly cdr = inject(ChangeDetectorRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() gifs: Gif[] = [];
-
-  @Input() isLoading: boolean = false;
-
+  @Input() isLoading = false;
   @Input() error: string | null = null;
-
-  @Input() searchTerm: string = '';
-
-  @Input() pageSize: number = 15;
+  @Input() searchTerm = '';
+  @Input() pageSize = 16;
 
   private _currentPage = signal<number>(1);
   public readonly currentPage = this._currentPage.asReadonly();
 
-
-  public readonly totalPages = computed(() => {
-    return Math.ceil(this.gifs.length / this.pageSize);
-  });
+  public readonly totalPages = computed(() =>
+    Math.ceil(this.gifs.length / this.pageSize)
+  );
 
   public readonly paginatedGifs = computed(() => {
-    const startIndex = (this._currentPage() - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    return this.gifs.slice(startIndex, endIndex);
+    const start = (this._currentPage() - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.gifs.slice(start, end);
+  });
+
+  public readonly masonryColumns = computed(() => {
+    const gifs = this.paginatedGifs();
+    // 🔹 Columnas adaptativas según el ancho
+    const screenWidth = window.innerWidth;
+    let columnCount = 4;
+    if (screenWidth < 640) columnCount = 2;
+    else if (screenWidth < 1024) columnCount = 3;
+
+    const columns: Gif[][] = Array.from({ length: columnCount }, () => []);
+    const heights = Array.from({ length: columnCount }, () => 0);
+
+    gifs.forEach((gif) => {
+      const w = parseInt(gif.images?.fixed_width?.width || '1');
+      const h = parseInt(gif.images?.fixed_width?.height || '1');
+      const ratio = h / w;
+      const estHeight = Math.min(250 * ratio, 320);
+      const target = heights.indexOf(Math.min(...heights));
+      columns[target].push(gif);
+      heights[target] += estHeight + 16;
+    });
+
+    return columns;
   });
 
   public readonly pageNumbers = computed(() => {
@@ -42,17 +62,13 @@ export class ResultComponentComponent implements OnChanges {
     const pages: number[] = [];
 
     if (total <= 7) {
-      for (let i = 1; i <= total; i++) {
-        pages.push(i);
-      }
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else if (current <= 3) {
+      pages.push(1, 2, 3, 4, -1, total);
+    } else if (current >= total - 2) {
+      pages.push(1, -1, total - 3, total - 2, total - 1, total);
     } else {
-      if (current <= 3) {
-        pages.push(1, 2, 3, 4, -1, total);
-      } else if (current >= total - 2) {
-        pages.push(1, -1, total - 3, total - 2, total - 1, total);
-      } else {
-        pages.push(1, -1, current - 1, current, current + 1, -1, total);
-      }
+      pages.push(1, -1, current - 1, current, current + 1, -1, total);
     }
 
     return pages;
@@ -64,9 +80,8 @@ export class ResultComponentComponent implements OnChanges {
     return { start, end, total: this.gifs.length };
   });
 
-  public readonly hasPagination = computed(() => {
-    return this.totalPages() > 1;
-  });
+  public readonly hasPagination = computed(() => this.totalPages() > 1);
+
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this._currentPage.set(page);
@@ -109,36 +124,19 @@ export class ResultComponentComponent implements OnChanges {
   }
 
   private scrollToTop(): void {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.scrollY > 150) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Detectar cambios en GIFs
-    if (changes['gifs']) {
-      const prev = changes['gifs'].previousValue?.length || 0;
-      const curr = changes['gifs'].currentValue?.length || 0;
-      
-      if (!changes['gifs'].firstChange) {
-        this._currentPage.set(1);
-        console.log('🔄 Pagination reset to page 1');
-      }
-      
+    if (changes['gifs'] && !changes['gifs'].firstChange) {
+      this._currentPage.set(1);
+      console.log('🔄 Paginación reiniciada');
       this.cdr.markForCheck();
     }
 
-    if (changes['isLoading']) {
-      this.cdr.markForCheck();
-    }
-
-    if (changes['error']) {
-      if (changes['error'].currentValue) {
-        console.log(`Error: ${changes['error'].currentValue}`);
-      }
-      this.cdr.markForCheck();
-    }
-
-    if (changes['searchTerm']) {
-      console.log(`🔍 Search term: "${changes['searchTerm'].currentValue}"`);
+    if (changes['isLoading'] || changes['error'] || changes['searchTerm']) {
       this.cdr.markForCheck();
     }
   }
@@ -147,14 +145,17 @@ export class ResultComponentComponent implements OnChanges {
     return this.gifs.length > 0;
   }
 
+  get showEmptyState(): boolean {
+    return !this.isLoading && !this.hasGifs && !this.error;
+  }
+
   get noResultsMessage(): string {
-    if (this.searchTerm) {
-      return `No se encontraron resultados para "${this.searchTerm}"`;
-    }
-    return 'No hay GIFs para mostrar';
+    return this.searchTerm
+      ? `No se encontraron resultados para "${this.searchTerm}"`
+      : 'No hay GIFs para mostrar';
   }
 
   trackByGifId(index: number, gif: Gif): string {
     return gif.id;
   }
- }
+}
